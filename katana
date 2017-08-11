@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+MY_NAME="$0"
+MY_NAME_RESOLVED="$( realpath ${0} )"
+MY_NAME_SHORT="${MY_NAME##*/}"
+
+SAVED_PATH="${PATH}"
+export PATH=`echo "${PATH}" | sed -e "s?${MY_DIR}[^:]*:??g"`
+TOOL_NAME=`which "${MY_NAME_SHORT}"`
+export PATH=${SAVED_PATH}
+
+N_OCCURS=0
+
+while read -r line; do
+  echo "${line}" | grep "bash[^-]*${MY_NAME}" > /dev/null  && N_OCCURS=$((N_OCCURS+1))
+done < <(pstree -Asal  $$)
+
+if (( N_OCCURS > 2 )); then
+  ${TOOL_NAME} "$@"
+else
+  "${MY_DIR}/${MY_NAME_SHORT}.sh" "${TOOL_NAME}" "$@"
+fi
+
